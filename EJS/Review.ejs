@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Admin-Review Section</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Welcome to the IndoTechLogin admin webPage">
+        <link rel="stylesheet" href="./css/main.css">
+        <link rel = 'icon' href="./images/logo.jpeg">
+    </head>
+
+
+    <body>
+         <!--Import the header ejs file-->
+         <%- include('header') %>
+
+        <div class="admin-dashboard">
+            <nav>
+                <ul>
+                    <li>
+                       <a href="/admin"> Dashboard </a>   
+                    </li>
+                    <li>
+                        <a href="/sendrequest">Send Request</a>
+                    </li>
+                    <li>
+                        <a href="/Inventory">Review Inventory</a>
+                    </li>
+
+                    <li>
+                        <a href="/Review">Review Tasks</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="logout-button">
+            <h2>Welcome back <%= username %> </h2>
+            <a href="/logout"><button type="button">Logout</button></a>
+        </div>
+
+        <div class="admin-section-box">
+            <div class="admin-section-list">
+                <div class="header-timer">
+                <h1>REVIEW TASKS</h1>
+                <p id="current-time"></p>
+                </div>
+                <div class="clearButton">
+                    <button onclick="clearLocalStorage()">Clear and Send to Data Base</button>
+                </div>
+            </div>
+            <div class="review-section">
+                <h2>Confirmed Tasks for Review</h2>
+                <ul class="task-list">
+                    <% if (tasks && tasks.length > 0) { %>
+                        <% tasks.forEach(function(task) { %>
+                            <li class="task-item">
+                                <h3 class="project-number">Project Number: <%= task.projectNumber %></h3>
+                                <p class="task-detail">Door Type: <%= task.doorType %></p>
+                                <p class="task-detail">Quantity: <%= task.quantity %></p>
+                                <p class="task-detail">Length: <%= task.length %></p>
+                                <p class="task-detail">Door Type: <%= task.doorType %></p>
+                                <p class="task-detail">Door Category: <%= task.doorCategory %></p>
+                                <p class="task-detail">Quantity: <%= task.quantity %></p>
+                                <p class="task-detail">Type: <%= task.type %></p>
+                                <p class="task-detail">Part: <%= task.part %></p>
+                                <p class="task-detail">Estimated Time: <%= task.estimatedTime %> minutes</p>
+
+                            </li>
+                        <% }) %>
+                    <% } else { %>
+                        <p class="no-tasks-message">No confirmed tasks available for review.</p>
+                    <% } %>
+                </ul>
+            </div>
+            
+
+
+
+
+
+
+
+
+        </div>
+
+
+
+
+        <script>
+            function clearLocalStorage(){
+                localStorage.clear();
+                console.log('Storage Cleared')
+                location.reload();
+            }
+
+            function loadConfirmedTasks() {
+                const taskList = document.querySelector('.task-list');
+                // Check if taskList is found
+                if (!taskList) {
+                    console.error("Task list element not found.");
+                    return; // Exit the function if taskList is not found
+                }
+            
+                taskList.innerHTML = ''; // Clear any existing tasks to prevent duplication
+                let hasTasks = false; // Flag to check if any tasks were found
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.endsWith('-confirmed')) {
+                        const taskNumber = key.split('-')[1];
+                        const taskDataString = localStorage.getItem(`task-${taskNumber}-confirmed`);
+                        // Check if task data exists and is valid JSON
+                        if (taskDataString) {
+                            try {
+                                const taskData = JSON.parse(taskDataString);
+                                console.log(taskData)
+            
+                                // Create the task item HTML
+                                const taskItem = `
+                                    <li class="task-item">
+                                        <h3 class="project-number">Project Number: ${taskData.projectNumber}</h3>
+                                        <p class="task-detail">Door Type: ${taskData.doorType}</p>
+                                        <p class="task-detail">Quantity: ${taskData.quantity}</p>
+                                        <p class="task-detail">Length: ${taskData.length}</p>
+                                        <p class = "task-detail">Door type: ${taskData.doorType}</p>
+                                        <p class = "task-detail">Door category: ${taskData.doorCategory}</p>
+                                        <p class = "task-detail">Quantity: ${taskData.quantity}</p>
+                                        <p class = "task-detail">Type: ${taskData.type}</p>
+                                        <p class = "task-detail">Part: ${taskData.part}</p>
+                                        <p class="task-detail">Estimated Time: ${taskData.estimatedTime} minutes</p>
+                                        <p class="task-detail">Stock data: ${taskData.stockData}</p>
+                                        
+                                    </li>
+                                `;
+            
+                                taskList.innerHTML += taskItem; // Append the task item to the list
+                                hasTasks = true; // Set the flag to true as we found a task
+                            } catch (e) {
+                                console.error(`Error parsing task data for key ${key}:`, e);
+                            }
+                        }
+                    }
+                }
+            
+                // If no tasks were found, display a message
+                if (!hasTasks) {
+                    taskList.innerHTML = '<p class="no-tasks-message">No confirmed tasks available for review.</p>';
+                }
+            }
+            
+            
+            window.addEventListener('load',loadConfirmedTasks);
+
+        </script>
+
+        <script src="./js/timer.js"></script>
+    </body>
+
+</html>

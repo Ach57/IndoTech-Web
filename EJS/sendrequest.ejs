@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en"> 
+
+    <head>
+        <title> Send Request</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Welcome to the IndoTechLogin webPage">
+        <link rel="stylesheet" href="./css/main.css">
+        <link rel = 'icon' href="./images/logo.jpeg">
+
+    </head>
+
+    <body>
+        <!--Import the header ejs file-->
+        <%- include('header') %>
+
+        <div class="admin-dashboard">
+            <nav>
+                <ul>
+                    <li><a href="/admin">Dashboard</a></li>
+                    <li><a href="/sendrequest">Send Request</a></li>
+                    <li><a href="/Inventory">Review Inventory</a></li>
+                    <li><a href="/Review">Review Tasks</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <!--Display logged user-->
+        <div class="logout-button">
+            <h2>Welcome back <%= username %> </h2>
+            <a href="/logout"><button type="button">Logout</button></a>
+        </div>
+
+        <!--Request Submission-->
+        <div class="admin-section-box"> <!--Admin box -->
+
+                <div class="admin-section-list">
+                        
+                    <div class="header-timer">
+                        <h1>SEND REQUEST</h1>
+                        <p id="current-time"></p>
+                    </div>
+                        
+                </div>
+        
+                
+                <div class="form-container">
+
+                    <form id="request-form">
+                            <h1>Custom Parts</h1>
+                            <div class="form-group">
+                                <label for="doorType">Select Door Type</label>
+                                <select id="doorType" required>
+                                    <option value="">--Select--</option>
+                                    <option value="LHR">LHR</option>
+                                    <option value="ULTRA">ULTRA</option>
+                                    <option value="PRO">PRO</option>
+                                    <option value="MEGA">MEGA</option>
+                                </select>
+                            </div>
+                
+                            <div class="form-group">
+                                <label for="doorCategory">Select Door Category Type</label>
+                                <select id="doorCategory" required>
+                                    <option value="">--Select--</option>
+                                    <option value="Guides">Guides</option>
+                                    <option value="Barre de bas">Barre de bas</option>
+                                    <option value="C-Channel">C-Channel</option>
+                                    <option value="Tuyau Principale">Tuyau Principale</option>
+                                    <option value="Barre anti-vent">Barre anti-vent</option>
+                                    <option value="Ressort">Ressort</option>
+                                    <option value="Rideau">Rideau</option>
+                                </select>
+                            </div>
+                
+                        <div id="additionalOptions" class="hidden"> <!--Additional Options-->
+                                <div class="form-group">
+                                    <label for="partSelect">Select Part</label>
+                                    <select id="partSelect" required>
+                                        <!-- Options will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                
+                                <div class="form-group">
+                                    <label for="typeSelect">Select Type</label>
+                                    <select id="typeSelect" required>
+                                        <!-- Options will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                
+                                <!-- Added Length and Quantity fields -->
+                                <div class="form-group">
+                                    <label for="length">Length</label>
+                                    <input type="text" id="length" placeholder="Enter length" required />
+                                </div>
+                
+                                <div class="form-group">
+                                    <label for="quantity">Quantity</label>
+                                    <input type="number" id="quantity" placeholder="Enter quantity" required />
+                                </div>
+                        </div> <!-- End of Additional Options-->
+
+                        <h1>Stock Parts</h1>
+
+                        <div class="radio-group">
+                            <span class="radio-label">Do you want to select Stock Parts?</span>
+                            <label for="stock-yes" class="radio-label">Yes</label>
+                            <input type="radio" id="stock-yes" name="stock-selection" class="radio-button">
+                            <label for="stock-no" class="radio-label">No</label>
+                            <input type="radio" id="stock-no" name="stock-selection" class="radio-button">
+                        </div>
+
+                        <div id="stock-parts-container" class="hidden">
+                            <div class="form-group">
+                                <label for="categorySelect">Select Category</label>
+                                <select id="categorySelect"  name ="category">
+                                    <option value="">--Select--</option>
+                                    <option value="ENTETE">ENTETE</option>
+                                    <option value="Barre Anti-vent">Barre Anti-vent</option>
+                                    <option value="Guides">Guides</option>
+                                    <option value="Barre de bas">Barre de bas</option>
+                                    <option value="Rideau">Rideau</option>
+                                </select>
+                            </div>
+                        
+                            <div class="form-group">
+                                <label for="objectSelect">Select Object</label>
+                                <select id="objectSelect" name="object" >
+                                    <option value="" selected>--Select--</option>
+                                    <!-- Options will be populated by JavaScript -->
+                                </select>
+                            </div>
+                            <!-- New input fields for Type and Quantity -->
+                                <div class="form-group">
+                                    <label for="typeInput">Type</label>
+                                    <input type="text" id="typeInput" placeholder="Enter Type">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="qtyInput">Qty</label>
+                                    <input type="number" id="qtyInput" placeholder="Enter Quantity" min="1">
+                                </div>
+                        </div>
+                        
+                        
+                        <h1>Request Tab</h1>
+        
+                            <label for="project-number">Enter Project Number:</label>
+                            <input type="text" id="project-number" required placeholder="Project Number">
+        
+                            <div class="form-group" id="online-users">
+                                <label>Online Employees:</label>
+                                <select id="online-user-select" required>
+                                    <!-- Options for online employees will be populated by JavaScript -->
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Enter Duration (in milliseconds):</label>
+                                <input type="text" id="duration" required placeholder="Time in milli seconds">
+                            </div>
+                        <button type="submit" class="submit-btn">Submit</button>
+
+                    </form>
+
+                    
+                </div>
+
+                
+                <div id="summary-block" class="hidden"><!-- Summary Block -->
+                    <div class="summary-content">
+                        <form id="summary-form" action="/submit-summary" method="POST">
+                            <h2>Summary</h2>
+                
+                            <p><strong>Door Type:</strong> <span id="summary-door-type"></span></p>
+                            <input type="hidden" name="doorType" id="hidden-door-type">
+                            
+                            <p><strong>Door Category:</strong> <span id="summary-door-category"></span></p>
+                            <input type="hidden" name="doorCategory" id="hidden-door-category">
+                            
+                            <p><strong>Part:</strong> <span id="summary-part"></span></p>
+                            <input type="hidden" name="part" id="hidden-part">
+                            
+                            <p><strong>Type:</strong> <span id="summary-type"></span></p>
+                            <input type="hidden" name="type" id="hidden-type">
+                            
+                            <p><strong>Length:</strong> <span id="summary-length"></span></p>
+                            <input type="hidden" name="length" id="hidden-length">
+                            
+                            <p><strong>Quantity:</strong> <span id="summary-quantity"></span></p>
+                            <input type="hidden" name="quantity" id="hidden-quantity">
+                            
+                            <p><strong>Project Number:</strong> <span id="summary-project-number"></span></p>
+                            <input type="hidden" name="projectNumber" id="hidden-project-number">
+                            
+                            <p><strong>Online Employee:</strong> <span id="summary-online-employee"></span></p>
+                            <input type="hidden" name="onlineEmployee" id="hidden-online-employee">
+                            
+                            <p><strong>Estimated Time:</strong> <span id="summary-estimated-time"></span></p>
+                            <input type="hidden" name="estimatedTime" id="hidden-estimated-time">
+
+                            <p><strong>Stock Data:</strong> <span id="summary-stock-data"></span></p>
+                            <input type="hidden" name="stockData" id="hidden-stock-data">
+                
+                            <!-- Buttons -->
+                            <div class="button-group">
+                                <button type="submit" id="submit-summary" class="submit-btn">Submit</button>
+                                <button type="button" id="close-summary">Close</button>
+                            </div>
+                        </form>
+                    </div> <!-- End of Summary Block -->
+                </div>
+
+            
+        </div>  <!--End of Admin box -->
+
+        
+
+
+     
+    <footer>
+
+        <p><strong>&copy INDOTECH, 2004-2024. All rights reserved.</strong></p>
+
+    </footer>
+
+
+    <script src="./js/index.js"></script>
+    <script src="./js/timer.js"></script>
+    <script src="./js/categoryPartHandler.js"></script>
+    <script src="./js/getOnlineEmployee.js"></script>
+    <script src="./js/requestForm.js"></script>
+    <script src="./js/stockPartHandler.js"></script>
+    
+
+
+    
+    </body>
+
+
+
+</html>

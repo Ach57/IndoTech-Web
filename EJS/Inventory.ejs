@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Inventory Section</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Welcome to the IndoTechLogin admin webPage">
+        <link rel="stylesheet" href="./css/main.css">
+        <link rel = 'icon' href="./images/logo.jpeg">
+
+
+    </head>
+    <body>
+        <!--Import the header ejs file-->
+        <%- include('header') %>
+        <div class="admin-dashboard">
+            <nav>
+                <ul>
+                    <li>
+                       <a href="/admin"> Dashboard </a>   
+                    </li>
+                    <li>
+                        <a href="/sendrequest">Send Request</a>
+                    </li>
+                    <li>
+                        <a href="/Inventory">Review Inventory</a>
+                    </li>
+
+                    <li>
+                        <a href="/Review">Review Tasks</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div class="logout-button">
+            <h2>Welcome back <%= username %> </h2>
+            <a href="/logout"><button type="button">Logout</button></a>
+        </div>
+
+        <div class="admin-section-box">
+            <div class="admin-section-list">
+                <div class="header-timer">
+                <h1>INVENTORY</h1>
+                <p id="current-time"></p>
+                </div>
+            </div>
+
+            
+            
+
+
+
+
+
+
+
+            </div>
+
+            
+
+        </div>
+
+        <script src="./js/timer.js"></script>
+
+    </body>
+
+
+</html>

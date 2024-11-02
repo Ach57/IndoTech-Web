@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Employee - Dashboard</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/css/main.css">
+        <link rel = 'icon' href="/images/logo.jpeg">
+        <script src="/socket.io/socket.io.js"></script>
+    </head>
+    <body>
+        <div class="logout-button">
+            <h2>Welcome back <%= username %> </h2>
+            <a href="/logout"><button type="button">Logout</button></a>
+        </div>
+
+
+       <div id="task-container"></div>
+
+        <script>
+            const socket = io();
+            const taskContainer = document.getElementById('task-container');
+            window.onload = function(){
+                
+                const pendingTasks = JSON.parse(localStorage.getItem('pendingTasks'))||[]
+                // Loop through all pending tasks and display them
+                pendingTasks.forEach(task => displayTask(task));
+                // Find the task in the pendingTasks array
+                loadTasksFromStorage()
+            }
+            // Listen for new summary notifications
+
+            socket.on('new-summary', (data)=>{
+                
+                let pendingTasks = JSON.parse(localStorage.getItem('pendingTasks')) || [];
+                pendingTasks.push(data);
+                localStorage.setItem('pendingTasks', JSON.stringify(pendingTasks));
+
+                displayTask(data);
+               
+            });
+            function updateTaskList(){
+                 // Clear the current task container to avoid duplicates
+                taskContainer.innerHTML = '';
+
+                // Retrieve the updated list of pending tasks from localStorage
+                const pendingTasks = JSON.parse(localStorage.getItem('pendingTasks')) || [];
+
+                // Loop through each task and redisplay it
+                pendingTasks.forEach(task => {
+                    displayTask(task);  // Use the existing displayTask function to render each task
+                });
+            }
+            function displayTask(data){
+                const taskHtml = `
+                    <div class="task-box" id="task-${data.projectNumber}">
+                        <h3>New Task</h3>
+                        <p>Door Type: ${data.doorType}, Door Category: ${data.doorCategory}, Part: ${data.part}, Type: ${data.type}, Length: ${data.length}, Quantity: ${data.quantity}, Project Number: ${data.projectNumber}, Estimated Time: ${data.estimatedTime} minute,\n Stock Data: ${data.stockData}</p>
+                        <div class="task-buttons">
+                            <button type="button" class="btn accept" onclick="handleAction('accept', '${data.projectNumber}')">Accept</button>
+                            <button type="button" class="btn on-hold" onclick="handleAction('on-hold', '${data.projectNumber}')">Put on Hold</button>
+                            <button type="button" class="btn reject" onclick="handleAction('reject', '${data.projectNumber}')">Reject</button>
+                        </div>
+                    </div>
+                        `;
+                        taskContainer.innerHTML += taskHtml;
+            }
+        
+            // Function to handle task actions (accept, hold, reject)
+        function handleAction(action, projectNumber) {
+            let pendingTasks = JSON.parse(localStorage.getItem('pendingTasks')) || []
+
+            const taskIndex = pendingTasks.findIndex(task => task.projectNumber === projectNumber);
+            if (taskIndex === -1) {
+                console.error('Task not found in pending tasks.');
+                return; // Exit if the task doesn't exist
+            }
+
+            const taskData = pendingTasks[taskIndex];
+
+            if (action==='on-hold'){
+                taskData.status ='on-hold';
+                pendingTasks.splice(taskIndex,1);
+                pendingTasks.unshift(taskData);
+
+                // Update localStorage with the new order
+                localStorage.setItem('pendingTasks', JSON.stringify(pendingTasks));
+                
+                updateTaskList();
+                loadTasksFromStorage();
+                return;
+            }
+            fetch('/handle-task-action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action, ...taskData }),
+            })
+            .then(response => response.text())
+            .then(result => {
+                console.log(result);
+                // Remove the task from the task container
+                document.getElementById(`task-${projectNumber}`).remove();
+                
+                // Remove the task from localStorage
+                pendingTasks.splice(taskIndex, 1); // Remove the task from the array
+                localStorage.setItem('pendingTasks', JSON.stringify(pendingTasks)); // Update localStorage
+            })
+            .catch(error => console.error('Error:', error));
+
+        }
+
+        function updateTimerAndProgress(projectNumber, durationInMinutes) {
+            const timerElement = document.getElementById(`timer-${projectNumber}`);
+            const progressBar = document.getElementById(`progress-bar-${projectNumber}`);
+            const taskElement = document.getElementById(`task-${projectNumber}`);
+        
+            const isTaskConfirmed = localStorage.getItem(`task-${projectNumber}-confirmed`) === 'true';
+        
+            if (isTaskConfirmed) {
+                taskElement.innerHTML += '<p>Task Confirmed</p>';
+                return;
+            }
+        
+            // Convert duration from minutes to milliseconds
+            const durationInMilliseconds = durationInMinutes * 60 * 1000;
+        
+            // Get the end time or calculate it
+            let savedEnd = localStorage.getItem(`task-${projectNumber}-end`);
+            let end;
+        
+            if (savedEnd) {
+                end = parseInt(savedEnd);  // Load stored end time
+            } else {
+                end = Date.now() + durationInMilliseconds;  // Calculate end time based on duration
+                localStorage.setItem(`task-${projectNumber}-end`, end);  // Store it
+            }
+        
+            const interval = setInterval(() => {
+                const now = Date.now();
+                let timeRemaining = end - now;
+        
+                if (timeRemaining < 0) {
+                    timeRemaining = 0;
+                    clearInterval(interval);
+                }
+        
+                // Calculate minutes and seconds
+                const minutes = Math.floor(timeRemaining / 60000);
+                const seconds = Math.floor((timeRemaining % 60000) / 1000);
+                timerElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+                // Update progress bar
+                const percentage = ((durationInMilliseconds - timeRemaining) / durationInMilliseconds) * 100;
+                progressBar.style.width = `${Math.min(percentage, 100)}%`;
+        
+                if (timeRemaining === 0) {
+                    clearInterval(interval);
+        
+                    // Show the confirm button
+                    const confirmButton = document.createElement('button');
+                    confirmButton.textContent = 'Confirm';
+                    confirmButton.className = 'confirm-button';
+                    confirmButton.addEventListener('click', () => {
+                        const taskData = JSON.parse(localStorage.getItem(`task-${projectNumber}`));
+        
+                        // Store confirmed task in localStorage
+                        localStorage.setItem(`task-${projectNumber}-confirmed`, JSON.stringify(taskData));
+        
+                        // Clear other localStorage entries for this task
+                        localStorage.removeItem(`task-${projectNumber}`);
+                        localStorage.removeItem(`task-${projectNumber}-start`);
+                        localStorage.removeItem(`task-${projectNumber}-end`);
+        
+                        // Send confirmed task data to the server to display on review page
+                        fetch('/submit-confirmed-task', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(taskData),
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                console.log(`Task ${projectNumber} confirmed and sent to review page.`);
+                                taskElement.remove();
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                    });
+        
+                    taskElement.appendChild(confirmButton);
+                }
+            }, 1000);
+        }
+        function loadTasksFromStorage() {
+            Object.keys(localStorage).forEach(key => {
+                
+                if (key.startsWith('task-') && !key.endsWith('-confirmed') && !key.endsWith('-end') && !key.endsWith('-start')) {
+                    const taskData = JSON.parse(localStorage.getItem(key));
+                    const isConfirmed = localStorage.getItem(`task-${taskData.projectNumber}-confirmed`) !== null;
+        
+                    const taskHtml = `
+                        <div class="task-min-box" id="task-${taskData.projectNumber}">
+                            <h3>PROJECT ${taskData.projectNumber}</h3>
+                            <h4>Description:</h4>
+                            <p>Door Type: ${taskData.doorType}, Door Category: ${taskData.doorCategory}, Part: ${taskData.part}, Type: ${taskData.type}, Length: ${taskData.length}, Quantity: ${taskData.quantity}, Project Number: ${taskData.projectNumber}, Estimated Time: ${taskData.estimatedTime} minute, Stock Data: ${taskData.stockData}</p>
+                            <div class="progress-bar-box">
+                                <h5>Progression Bar:</h5>
+                                <div class="progress-container">
+                                    <div class="progress-bar" id="progress-bar-${taskData.projectNumber}" style="width: 0%;"></div>
+                                </div>
+                                <div class="timer-box" id="timer-${taskData.projectNumber}">00:00</div>
+                            </div>
+                            ${isConfirmed ? '<p>Task Confirmed</p>' : ''}
+                        </div>
+                    `;
+                    taskContainer.innerHTML += taskHtml;
+                    updateTimerAndProgress(taskData.projectNumber, taskData.estimatedTime);
+                }
+            });
+        }
+
+        socket.on('task-accepted',(taskData)=>{
+            if(taskData.status ==="accept"){
+            
+                const taskHtml = `
+                            <div class="task-min-box" id="task-${taskData.projectNumber}">
+                                <h3>PROJECT ${taskData.projectNumber}</h3>
+                                <h4>Description:</h4>
+                                <p>Door Type: ${taskData.doorType}, Door Category: ${taskData.doorCategory}, Part: ${taskData.part}, Type: ${taskData.type}, Length: ${taskData.length}, Quantity: ${taskData.quantity}, Project Number: ${taskData.projectNumber}, Estimated Time: ${taskData.estimatedTime} minute,\n Stock Data: ${taskData.stockData}</p>
+                                <div class="progress-bar-box">
+                                    <h5>Progression Bar:</h5>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" id="progress-bar-${taskData.projectNumber}" style="width: 0%;"></div>
+                                    </div>
+                                    <div class="timer-box" id="timer-${taskData.projectNumber}">00:00</div>
+                                </div>
+                            </div>
+                        `;
+                taskContainer.innerHTML += taskHtml;
+
+                localStorage.setItem(`task-${taskData.projectNumber}`, JSON.stringify(taskData));
+                        
+                updateTimerAndProgress(taskData.projectNumber, taskData.estimatedTime);
+
+            }
+            
+
+        })
+
+        </script>
+
+        <script>
+
+        </script>
+
+
+
+    </body>
+
+
+
+
+</html>
